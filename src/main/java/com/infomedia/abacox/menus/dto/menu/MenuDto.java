@@ -23,5 +23,6 @@ public class MenuDto extends ActivableDto {
     private String path;
     private String displayName;
     private boolean requiresPermissions;
+    private boolean crud;
     private Set<MenuDto> submenus = new LinkedHashSet<>();
 }

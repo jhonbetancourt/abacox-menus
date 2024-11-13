@@ -24,6 +24,7 @@ public class MenuService extends CrudService<Menu, Long, MenuRepository> {
                 .displayName(cDto.getDisplayName())
                 .parent(find(cDto.getParentId()).orElse(null))
                 .requiresPermissions(cDto.getRequiresPermissions())
+                .crud(cDto.getCrud())
                 .build();
     }
 
@@ -33,7 +34,12 @@ public class MenuService extends CrudService<Menu, Long, MenuRepository> {
         uDto.getDisplayName().ifPresent(entity::setDisplayName);
         uDto.getParentId().ifPresent(id -> entity.setParent(find(id).orElse(null)));
         uDto.getRequiresPermissions().ifPresent(entity::setRequiresPermissions);
+        uDto.getCrud().ifPresent(entity::setCrud);
         return entity;
+    }
+
+    public Menu getActiveByPath(String path) {
+        return getRepository().findByActiveAndPath(true, path).stream().findFirst().orElse(null);
     }
 
     public Menu create(CreateMenu cDto) {

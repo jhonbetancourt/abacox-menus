@@ -28,20 +28,20 @@ public class MenuPermissionService extends CrudService<MenuPermission, Long, Men
         return MenuPermission.builder()
                 .rolename(cDto.getRolename())
                 .menu(menuService.get(cDto.getMenuId()))
-                .canCreate(cDto.getCanCreate())
-                .canRead(cDto.getCanRead())
-                .canUpdate(cDto.getCanUpdate())
-                .canDelete(cDto.getCanDelete())
+                .canCreate(cDto.getCanCreate() != null && cDto.getCanCreate())
+                .canRead(cDto.getCanRead() != null && cDto.getCanRead())
+                .canUpdate(cDto.getCanUpdate() != null && cDto.getCanUpdate())
+                .canDelete(cDto.getCanDelete() != null && cDto.getCanDelete())
                 .build();
     }
 
     public MenuPermission updateDtoToEntity(MenuPermission entity, UpdateMenuPermission uDto) {
         uDto.getRolename().ifPresent(entity::setRolename);
         uDto.getMenuId().ifPresent(id -> entity.setMenu(menuService.get(id)));
-        uDto.getCanCreate().ifPresent(entity::setCanCreate);
-        uDto.getCanRead().ifPresent(entity::setCanRead);
-        uDto.getCanUpdate().ifPresent(entity::setCanUpdate);
-        uDto.getCanDelete().ifPresent(entity::setCanDelete);
+        uDto.getCanCreate().ifPresent(u -> entity.setCanCreate(u != null && u));
+        uDto.getCanRead().ifPresent(u -> entity.setCanRead(u != null && u));
+        uDto.getCanUpdate().ifPresent(u -> entity.setCanUpdate(u != null && u));
+        uDto.getCanDelete().ifPresent(u -> entity.setCanDelete(u != null && u));
         return entity;
     }
 
@@ -59,10 +59,10 @@ public class MenuPermissionService extends CrudService<MenuPermission, Long, Men
 
     public void validateRequirePermissions(MenuPermission entity) {
         if(!entity.getMenu().isRequiresPermissions()){
-            entity.setCanCreate(true);
-            entity.setCanRead(true);
-            entity.setCanUpdate(true);
-            entity.setCanDelete(true);
+            entity.setCanCreate(false);
+            entity.setCanRead(false);
+            entity.setCanUpdate(false);
+            entity.setCanDelete(false);
         }
     }
 
@@ -80,11 +80,13 @@ public class MenuPermissionService extends CrudService<MenuPermission, Long, Men
         return save(menuPermission);
     }
 
-    public List<RoleMenuPermission> getRoleMenuPermissions(String rolename, Long menuId){
-        if(menuId==null) {
-            return buildRoleMenuPermissions(rolename, new LinkedHashSet<>(menuService.getRootMenus()));
+    public List<RoleMenuPermission> getRoleMenuPermissions(String rolename, Long menuId, String path){
+        if(menuId!=null) {
+            return buildRoleMenuPermissions(rolename, Set.of(menuService.getActive(menuId)));
+        }else if(path!=null){
+            return buildRoleMenuPermissions(rolename, Set.of(menuService.getActiveByPath(path)));
         }
-        return buildRoleMenuPermissions(rolename, Set.of(menuService.getActive(menuId)));
+        return buildRoleMenuPermissions(rolename, new LinkedHashSet<>(menuService.getRootMenus()));
     }
 
     private List<RoleMenuPermission> buildRoleMenuPermissions(String rolename, Set<Menu> menus){
@@ -93,6 +95,9 @@ public class MenuPermissionService extends CrudService<MenuPermission, Long, Men
         }
         List<RoleMenuPermission> roleMenuPermissions = new ArrayList<>();
         for (Menu menu : menus) {
+            if(!menu.isActive()) {
+                continue;
+            }
             MenuPermission menuPermission = getRepository().findByRolenameAndMenu(rolename, menu).orElse(null);
             PermissionDto permission = menuPermission==null?null:modelConverter.map(menuPermission, PermissionDto.class);
             RoleMenuPermission rmp = RoleMenuPermission.builder()
@@ -106,12 +111,16 @@ public class MenuPermissionService extends CrudService<MenuPermission, Long, Men
 
             if(menu.isRequiresPermissions()){
                 if(permission!=null){
-                    roleMenuPermissions.add(rmp);
-                }else if(!rmp.getSubmenus().isEmpty()){
-                    rmp.setPermission(new PermissionDto(null, false, false, false, false));
+                    if(!menu.isCrud()){
+                        rmp.getPermission().setCanCreate(null);
+                        rmp.getPermission().setCanRead(null);
+                        rmp.getPermission().setCanUpdate(null);
+                        rmp.getPermission().setCanDelete(null);
+                    }
                     roleMenuPermissions.add(rmp);
                 }
             }else{
+                rmp.setPermission(null);
                 roleMenuPermissions.add(rmp);
             }
         }

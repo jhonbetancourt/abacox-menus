@@ -29,6 +29,9 @@ public class UpdateMenu {
     private JsonNullable<String> displayName = JsonNullable.undefined();
     @Schema(description = "Whether the menu requires permissions", example = "true")
     private JsonNullable<Boolean> requiresPermissions = JsonNullable.undefined();
+    @NotNull
+    @Schema(description = "Whether the menu is a CRUD menu", example = "true")
+    private JsonNullable<Boolean> crud = JsonNullable.undefined();
     @Schema(description = "ID of the parent menu", example = "1")
     private JsonNullable<Long> parentId = JsonNullable.undefined();
 }

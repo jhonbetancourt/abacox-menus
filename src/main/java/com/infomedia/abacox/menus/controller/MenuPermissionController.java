@@ -42,7 +42,7 @@ public class MenuPermissionController {
         return modelConverter.map(menuPermissionService.update(id, uDto), MenuPermissionDto.class);
     }
 
-    @PatchMapping(value = "{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(value = "{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public void delete(@PathVariable("id") Long id) {
         menuPermissionService.deleteById(id);
     }
@@ -53,8 +53,9 @@ public class MenuPermissionController {
     }
 
     @GetMapping(value = "role", produces = MediaType.APPLICATION_JSON_VALUE)
-    private List<RoleMenuPermission> role(@RequestParam String rolename, @RequestParam(required = false) Long menuId) {
-        return menuPermissionService.getRoleMenuPermissions(rolename, menuId);
+    private List<RoleMenuPermission> role(@RequestParam String rolename, @RequestParam(required = false) Long menuId
+            , @RequestParam(required = false) String path) {
+        return menuPermissionService.getRoleMenuPermissions(rolename, menuId, path);
     }
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)

@@ -20,4 +20,5 @@ public class Menu0Dto extends ActivableDto {
     private String displayName;
     private Long parentMenuId;
     private boolean requiresPermissions;
+    private boolean crud;
 }

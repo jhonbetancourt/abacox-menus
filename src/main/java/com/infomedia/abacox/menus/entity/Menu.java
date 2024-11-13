@@ -46,8 +46,11 @@ public class Menu extends ActivableEntity {
     @OneToMany(mappedBy = "parent", orphanRemoval = true)
     private Set<Menu> submenus = new LinkedHashSet<>();
 
-    @Column(name = "requires_permissions")
+    @Column(name = "requires_permissions", nullable = false)
     private boolean requiresPermissions;
+
+    @Column(name = "crud", nullable = false)
+    private boolean crud;
 
     @Override
     public final boolean equals(Object o) {

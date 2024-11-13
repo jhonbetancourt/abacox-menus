@@ -29,6 +29,9 @@ public class CreateMenu {
     @NotNull
     @Schema(description = "Whether the menu requires permissions", example = "true")
     private Boolean requiresPermissions;
+    @NotNull
+    @Schema(description = "Whether the menu is a CRUD menu", example = "true")
+    private Boolean crud;
     @Schema(description = "ID of the parent menu", example = "1")
     private Long parentId;
 }

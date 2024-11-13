@@ -23,16 +23,12 @@ public class UpdateMenuPermission {
     @NotNull
     @Schema(description = "Menu id", example = "1")
     private JsonNullable<Long> menuId = JsonNullable.undefined();
-    @NotNull
     @Schema(description = "Create permission", example = "true")
     private JsonNullable<Boolean> canCreate = JsonNullable.undefined();
-    @NotNull
     @Schema(description = "Read permission", example = "true")
     private JsonNullable<Boolean> canRead = JsonNullable.undefined();
-    @NotNull
     @Schema(description = "Update permission", example = "true")
     private JsonNullable<Boolean> canUpdate = JsonNullable.undefined();
-    @NotNull
     @Schema(description = "Delete permission", example = "true")
     private JsonNullable<Boolean> canDelete = JsonNullable.undefined();
 }

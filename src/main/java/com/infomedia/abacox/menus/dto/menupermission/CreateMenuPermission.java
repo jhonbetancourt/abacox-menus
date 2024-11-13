@@ -22,16 +22,12 @@ public class CreateMenuPermission {
     @NotNull
     @Schema(description = "Menu id", example = "1")
     private Long menuId;
-    @NotNull
     @Schema(description = "Create permission", example = "true")
     private Boolean canCreate;
-    @NotNull
     @Schema(description = "Read permission", example = "true")
     private Boolean canRead;
-    @NotNull
     @Schema(description = "Update permission", example = "true")
     private Boolean canUpdate;
-    @NotNull
     @Schema(description = "Delete permission", example = "true")
     private Boolean canDelete;
 }
