@@ -63,8 +63,6 @@ public class SecurityConfig {
                 , "/swagger-ui/**"
                 , "/swagger-ui.html"
                 , "/error"
-                , "/api/menu/**"
-                , "/api/menuPermission/**"
                 , "/api/module/**"
                 , "/websocket/module"};
     }
