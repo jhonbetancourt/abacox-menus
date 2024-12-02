@@ -1,5 +1,7 @@
 package com.infomedia.abacox.menus.component.events;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.infomedia.abacox.menus.config.JsonConfig;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -14,18 +16,16 @@ import java.util.UUID;
 @NoArgsConstructor
 @Data
 @SuperBuilder(toBuilder = true)
-public class EventMessage extends WSMessage{
+public class ResponseMessage extends WSMessage {
     private UUID id;
     private String source;
     private Instant timestamp;
-    private EventType eventType;
-    private String content;
+    private boolean success;
+    private String exception;
+    private String errorMessage;
+    private JsonNode result;
 
-    public EventMessage(String source, EventType eventType, String content) {
-        this.id = UUID.randomUUID();
-        this.eventType = eventType;
-        this.timestamp = Instant.now();
-        this.content = content;
-        this.source = source;
+    public <T> T getResult(Class<T> clazz) {
+        return JsonConfig.getObjectMapper().convertValue(result, clazz);
     }
 }
