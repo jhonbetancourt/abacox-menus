@@ -1,7 +1,6 @@
-package com.infomedia.abacox.menus.component.functiontools;
+package com.infomedia.abacox.menus.component.events;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.infomedia.abacox.menus.config.JsonConfig;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,13 +10,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @Builder
-public class FunctionResult {
+public class CommandResult {
     private boolean success;
     private String exception;
     private String message;
     private JsonNode result;
-
-    public <T> T getResult(Class<T> clazz) {
-        return JsonConfig.getObjectMapper().convertValue(result, clazz);
-    }
 }

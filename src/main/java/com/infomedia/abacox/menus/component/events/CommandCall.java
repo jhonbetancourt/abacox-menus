@@ -1,4 +1,4 @@
-package com.infomedia.abacox.menus.component.functiontools;
+package com.infomedia.abacox.menus.component.events;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -13,11 +13,9 @@ import java.util.Map;
 @NoArgsConstructor
 @Data
 @Builder
-public class FunctionCall {
+public class CommandCall {
     @NotBlank
-    private String service;
-    @NotBlank
-    private String function;
+    private String command;
     @Size(min = 1)
     private Map<String, Object> arguments;
 }
