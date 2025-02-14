@@ -95,6 +95,15 @@ public class EventsWebSocketServer extends TextWebSocketHandler implements WebSo
         }
     }
 
+    public void sendWSEventMessage(EventType eventType, String channel, String target, String content, String owner) {
+        try {
+            WSMessage message = new WSEventMessage(source, eventType, channel, target, content, owner);
+            session.sendMessage(new TextMessage(objectMapper.writeValueAsString(message)));
+        } catch (IOException e) {
+            log.error("Error occurred while sending message to " + session.getRemoteAddress() + ": " + e.getMessage(), e);
+        }
+    }
+
     public CommandResponseMessage sendCommandRequestAndAwaitResponse(String command, Map<String, Object> arguments)
             throws IOException, TimeoutException {
         return sendCommandRequestAndAwaitResponse(command, arguments, REQUEST_TIMEOUT_SECONDS);

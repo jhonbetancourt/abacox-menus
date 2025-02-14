@@ -15,13 +15,19 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class EventMessage extends WSMessage{
+public class WSEventMessage extends WSMessage{
+    private String owner;
     private EventType eventType;
+    private String channel;
+    private String target;
     private JsonNode content;
 
-    public EventMessage(String source, EventType eventType, String content) {
-        super(UUID.randomUUID(), source, LocalDateTime.now(), MessageType.EVENT);
+    public WSEventMessage(String source, EventType eventType, String channel, String target, String content, String owner) {
+        super(UUID.randomUUID(), source, LocalDateTime.now(), MessageType.WS_EVENT);
         this.eventType = eventType;
+        this.channel = channel;
+        this.target = target;
+        this.owner = owner;
         try {
             this.content = JsonConfig.getObjectMapper().readTree(content);
         } catch (JsonProcessingException e) {

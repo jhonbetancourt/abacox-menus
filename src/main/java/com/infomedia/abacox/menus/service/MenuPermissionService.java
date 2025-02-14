@@ -1,26 +1,49 @@
 package com.infomedia.abacox.menus.service;
 
 import com.infomedia.abacox.menus.component.modeltools.ModelConverter;
+import com.infomedia.abacox.menus.dto.applicationevent.MenuPermissionDeletedEvent;
 import com.infomedia.abacox.menus.dto.menupermission.CreateMenuPermission;
 import com.infomedia.abacox.menus.dto.menupermission.PermissionDto;
 import com.infomedia.abacox.menus.dto.menupermission.RoleMenuPermission;
 import com.infomedia.abacox.menus.dto.menupermission.UpdateMenuPermission;
+import com.infomedia.abacox.menus.dto.role.RoleDto;
 import com.infomedia.abacox.menus.entity.Menu;
 import com.infomedia.abacox.menus.entity.MenuPermission;
 import com.infomedia.abacox.menus.exception.ResourceAlreadyExistsException;
+import com.infomedia.abacox.menus.exception.ResourceNotFoundException;
 import com.infomedia.abacox.menus.repository.MenuPermissionRepository;
 import com.infomedia.abacox.menus.service.common.CrudService;
+import com.infomedia.abacox.menus.service.remote.UserService;
+import jakarta.transaction.Transactional;
+import jakarta.validation.ValidationException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+
 import java.util.*;
 
 @Service
 public class MenuPermissionService extends CrudService<MenuPermission, Long, MenuPermissionRepository> {
     private final MenuService menuService;
     private final ModelConverter modelConverter;
-    public MenuPermissionService(MenuPermissionRepository repository, MenuService menuService, ModelConverter modelConverter) {
+    private final UserService userService;
+    private final ApplicationEventPublisher eventPublisher;
+
+    public MenuPermissionService(MenuPermissionRepository repository,
+                                 MenuService menuService,
+                                 ModelConverter modelConverter,
+                                 UserService userService, ApplicationEventPublisher eventPublisher) {
         super(repository);
         this.menuService = menuService;
         this.modelConverter = modelConverter;
+        this.userService = userService;
+        this.eventPublisher = eventPublisher;
+    }
+
+    private void validateRoleExists(String rolename) {
+        RoleDto role = userService.findRole(rolename);
+        if (role == null) {
+            throw new ValidationException("Role does not exist");
+        }
     }
 
 
@@ -46,19 +69,19 @@ public class MenuPermissionService extends CrudService<MenuPermission, Long, Men
     }
 
     public void validateExists(MenuPermission entity) {
-        if (entity.getId()==null) {
-            if(getRepository().existsByRolenameAndMenu_Id(entity.getRolename(), entity.getMenu().getId())) {
+        if (entity.getId() == null) {
+            if (getRepository().existsByRolenameAndMenu_Id(entity.getRolename(), entity.getMenu().getId())) {
                 throw new ResourceAlreadyExistsException(MenuPermission.class);
             }
-        }else{
-            if(getRepository().existsByRolenameAndMenu_IdAndIdNot(entity.getRolename(), entity.getMenu().getId(), entity.getId())) {
+        } else {
+            if (getRepository().existsByRolenameAndMenu_IdAndIdNot(entity.getRolename(), entity.getMenu().getId(), entity.getId())) {
                 throw new ResourceAlreadyExistsException(MenuPermission.class);
             }
         }
     }
 
     public void validateRequirePermissions(MenuPermission entity) {
-        if(!entity.getMenu().isRequiresPermissions()){
+        if (!entity.getMenu().isRequiresPermissions()) {
             entity.setCanCreate(false);
             entity.setCanRead(false);
             entity.setCanUpdate(false);
@@ -67,6 +90,7 @@ public class MenuPermissionService extends CrudService<MenuPermission, Long, Men
     }
 
     public MenuPermission create(CreateMenuPermission cDto) {
+        validateRoleExists(cDto.getRolename());
         MenuPermission menuPermission = createDtoToEntity(cDto);
         validateRequirePermissions(menuPermission);
         validateExists(menuPermission);
@@ -74,32 +98,35 @@ public class MenuPermissionService extends CrudService<MenuPermission, Long, Men
     }
 
     public MenuPermission update(Long id, UpdateMenuPermission uDto) {
+        if (uDto.getRolename().isPresent()) {
+            validateRoleExists(uDto.getRolename().get());
+        }
         MenuPermission menuPermission = updateDtoToEntity(get(id), uDto);
         validateRequirePermissions(menuPermission);
         validateExists(menuPermission);
         return save(menuPermission);
     }
 
-    public List<RoleMenuPermission> getRoleMenuPermissions(String rolename, Long menuId, String path){
-        if(menuId!=null) {
+    public List<RoleMenuPermission> getRoleMenuPermissions(String rolename, Long menuId, String path) {
+        if (menuId != null) {
             return buildRoleMenuPermissions(rolename, Set.of(menuService.getActive(menuId)));
-        }else if(path!=null){
+        } else if (path != null) {
             return buildRoleMenuPermissions(rolename, Set.of(menuService.getActiveByPath(path)));
         }
         return buildRoleMenuPermissions(rolename, new LinkedHashSet<>(menuService.getRootMenus()));
     }
 
-    private List<RoleMenuPermission> buildRoleMenuPermissions(String rolename, Set<Menu> menus){
-        if(menus==null){
+    private List<RoleMenuPermission> buildRoleMenuPermissions(String rolename, Set<Menu> menus) {
+        if (menus == null) {
             return List.of();
         }
         List<RoleMenuPermission> roleMenuPermissions = new ArrayList<>();
         for (Menu menu : menus) {
-            if(!menu.isActive()) {
+            if (!menu.isActive()) {
                 continue;
             }
             MenuPermission menuPermission = getRepository().findByRolenameAndMenu(rolename, menu).orElse(null);
-            PermissionDto permission = menuPermission==null?null:modelConverter.map(menuPermission, PermissionDto.class);
+            PermissionDto permission = menuPermission == null ? null : modelConverter.map(menuPermission, PermissionDto.class);
             RoleMenuPermission rmp = RoleMenuPermission.builder()
                     .id(menu.getId())
                     .name(menu.getName())
@@ -109,9 +136,9 @@ public class MenuPermissionService extends CrudService<MenuPermission, Long, Men
                     .submenus(new LinkedHashSet<>(buildRoleMenuPermissions(rolename, menu.getSubmenus())))
                     .build();
 
-            if(menu.isRequiresPermissions()){
-                if(permission!=null){
-                    if(!menu.isCrud()){
+            if (menu.isRequiresPermissions()) {
+                if (permission != null) {
+                    if (!menu.isCrud()) {
                         rmp.getPermission().setCanCreate(null);
                         rmp.getPermission().setCanRead(null);
                         rmp.getPermission().setCanUpdate(null);
@@ -119,12 +146,20 @@ public class MenuPermissionService extends CrudService<MenuPermission, Long, Men
                     }
                     roleMenuPermissions.add(rmp);
                 }
-            }else{
+            } else {
                 rmp.setPermission(null);
                 roleMenuPermissions.add(rmp);
             }
         }
         roleMenuPermissions.sort(Comparator.comparing(RoleMenuPermission::getDisplayName));
         return roleMenuPermissions;
-     }
+    }
+
+
+    @Transactional
+    @Override
+    public void deleteById(Long id) {
+        super.deleteById(id);
+        eventPublisher.publishEvent(new MenuPermissionDeletedEvent(id));
+    }
 }
