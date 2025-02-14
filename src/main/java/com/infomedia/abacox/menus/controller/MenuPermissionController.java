@@ -5,7 +5,6 @@ import com.infomedia.abacox.menus.dto.menupermission.CreateMenuPermission;
 import com.infomedia.abacox.menus.dto.menupermission.MenuPermissionDto;
 import com.infomedia.abacox.menus.dto.menupermission.RoleMenuPermission;
 import com.infomedia.abacox.menus.dto.menupermission.UpdateMenuPermission;
-import com.infomedia.abacox.menus.dto.superclass.ActivationDto;
 import com.infomedia.abacox.menus.entity.MenuPermission;
 import com.infomedia.abacox.menus.service.MenuPermissionService;
 import com.turkraft.springfilter.boot.Filter;

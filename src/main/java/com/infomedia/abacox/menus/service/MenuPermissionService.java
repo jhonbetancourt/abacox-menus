@@ -1,7 +1,6 @@
 package com.infomedia.abacox.menus.service;
 
 import com.infomedia.abacox.menus.component.modeltools.ModelConverter;
-import com.infomedia.abacox.menus.dto.applicationevent.MenuPermissionDeletedEvent;
 import com.infomedia.abacox.menus.dto.menupermission.CreateMenuPermission;
 import com.infomedia.abacox.menus.dto.menupermission.PermissionDto;
 import com.infomedia.abacox.menus.dto.menupermission.RoleMenuPermission;
@@ -9,14 +8,14 @@ import com.infomedia.abacox.menus.dto.menupermission.UpdateMenuPermission;
 import com.infomedia.abacox.menus.dto.role.RoleDto;
 import com.infomedia.abacox.menus.entity.Menu;
 import com.infomedia.abacox.menus.entity.MenuPermission;
+import com.infomedia.abacox.menus.entity.MenuShortcut;
 import com.infomedia.abacox.menus.exception.ResourceAlreadyExistsException;
-import com.infomedia.abacox.menus.exception.ResourceNotFoundException;
 import com.infomedia.abacox.menus.repository.MenuPermissionRepository;
+import com.infomedia.abacox.menus.repository.MenuShortcutRepository;
 import com.infomedia.abacox.menus.service.common.CrudService;
 import com.infomedia.abacox.menus.service.remote.UserService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.ValidationException;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -26,17 +25,17 @@ public class MenuPermissionService extends CrudService<MenuPermission, Long, Men
     private final MenuService menuService;
     private final ModelConverter modelConverter;
     private final UserService userService;
-    private final ApplicationEventPublisher eventPublisher;
+    private final MenuShortcutRepository menuShortcutRepository;
 
     public MenuPermissionService(MenuPermissionRepository repository,
                                  MenuService menuService,
                                  ModelConverter modelConverter,
-                                 UserService userService, ApplicationEventPublisher eventPublisher) {
+                                 UserService userService, MenuShortcutRepository menuShortcutRepository) {
         super(repository);
         this.menuService = menuService;
         this.modelConverter = modelConverter;
         this.userService = userService;
-        this.eventPublisher = eventPublisher;
+        this.menuShortcutRepository = menuShortcutRepository;
     }
 
     private void validateRoleExists(String rolename) {
@@ -89,6 +88,7 @@ public class MenuPermissionService extends CrudService<MenuPermission, Long, Men
         }
     }
 
+    @Transactional
     public MenuPermission create(CreateMenuPermission cDto) {
         validateRoleExists(cDto.getRolename());
         MenuPermission menuPermission = createDtoToEntity(cDto);
@@ -97,6 +97,7 @@ public class MenuPermissionService extends CrudService<MenuPermission, Long, Men
         return save(menuPermission);
     }
 
+    @Transactional
     public MenuPermission update(Long id, UpdateMenuPermission uDto) {
         if (uDto.getRolename().isPresent()) {
             validateRoleExists(uDto.getRolename().get());
@@ -155,11 +156,40 @@ public class MenuPermissionService extends CrudService<MenuPermission, Long, Men
         return roleMenuPermissions;
     }
 
-
     @Transactional
     @Override
     public void deleteById(Long id) {
+        // First, get all shortcuts for this menu permission
+        List<MenuShortcut> shortcutsToRemove = menuShortcutRepository.findByMenuPermission_Id(id);
+
+        if (!shortcutsToRemove.isEmpty()) {
+            // Get affected usernames for reordering
+            List<String> affectedUsers = shortcutsToRemove.stream()
+                    .map(MenuShortcut::getUsername)
+                    .distinct()
+                    .toList();
+
+            // Delete the shortcuts
+            menuShortcutRepository.deleteAll(shortcutsToRemove);
+
+            // Reorder remaining shortcuts for each affected user
+            for (String username : affectedUsers) {
+                reorderRemainingShortcuts(username);
+            }
+        }
+
+        // Then delete the menu permission
         super.deleteById(id);
-        eventPublisher.publishEvent(new MenuPermissionDeletedEvent(id));
+    }
+
+    private void reorderRemainingShortcuts(String username) {
+        List<MenuShortcut> remainingShortcuts = menuShortcutRepository.findByUsernameOrderByOrderAsc(username);
+        for (int i = 0; i < remainingShortcuts.size(); i++) {
+            MenuShortcut shortcut = remainingShortcuts.get(i);
+            if (shortcut.getOrder() != i) {
+                shortcut.setOrder(i);
+                menuShortcutRepository.save(shortcut);
+            }
+        }
     }
 }

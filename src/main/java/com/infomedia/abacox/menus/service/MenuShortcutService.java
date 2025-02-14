@@ -1,7 +1,6 @@
 package com.infomedia.abacox.menus.service;
 
 import com.infomedia.abacox.menus.component.filtertools.SpecificationFilter;
-import com.infomedia.abacox.menus.dto.applicationevent.MenuPermissionDeletedEvent;
 import com.infomedia.abacox.menus.dto.menushortcut.CreateMenuShortcut;
 import com.infomedia.abacox.menus.dto.user.UserDto;
 import com.infomedia.abacox.menus.entity.MenuPermission;
@@ -12,10 +11,8 @@ import com.infomedia.abacox.menus.service.common.CrudService;
 import com.infomedia.abacox.menus.service.remote.UserService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.ValidationException;
-import org.springframework.context.event.EventListener;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 
 @Service
@@ -23,13 +20,11 @@ public class MenuShortcutService extends CrudService<MenuShortcut, Long, MenuSho
 
     private final MenuPermissionService menuPermissionService;
     private final UserService userService;
-    private final SpecificationFilter specificationFilter;
 
-    public MenuShortcutService(MenuShortcutRepository repository, MenuPermissionService menuPermissionService, UserService userService, SpecificationFilter specificationFilter) {
+    public MenuShortcutService(MenuShortcutRepository repository, MenuPermissionService menuPermissionService, UserService userService) {
         super(repository);
         this.menuPermissionService = menuPermissionService;
         this.userService = userService;
-        this.specificationFilter = specificationFilter;
     }
 
     @Transactional
@@ -95,10 +90,10 @@ public class MenuShortcutService extends CrudService<MenuShortcut, Long, MenuSho
     }
 
     @Transactional
-    public List<MenuShortcut> findByUsername(String username, Specification<MenuShortcut> specification) {
+    public List<MenuShortcut> findByUsername(String username) {
         removeInvalidShortcuts(username);
-        Specification<MenuShortcut> userSpec = specificationFilter.build("'username':'" + username + "'");
-        return getRepository().findAll(userSpec.and(specification));
+        Specification<MenuShortcut> spec = SpecificationFilter.build("'username':'" + username + "' and 'menuPermission.menu.active':'true'");
+        return getRepository().findAll(spec);
     }
 
     private void removeInvalidShortcuts(String username) {
@@ -110,22 +105,20 @@ public class MenuShortcutService extends CrudService<MenuShortcut, Long, MenuSho
         deleteAll(toRemove);
     }
 
-    @EventListener
     @Transactional
-    public void handleMenuPermissionDeleted(MenuPermissionDeletedEvent event) {
-        List<MenuShortcut> shortcutsToRemove = getRepository().findByMenuPermission_Id(event.getMenuPermissionId());
-        if (!shortcutsToRemove.isEmpty()) {
-            List<String> affectedUsers = shortcutsToRemove.stream()
-                    .map(MenuShortcut::getUsername)
-                    .distinct()
-                    .toList();
+    public void deleteByUsernameAndOrder(String username, Integer order) {
+        MenuShortcut shortcut = getRepository().findByUsernameAndOrder(username, order)
+                .orElseThrow(() -> new ResourceNotFoundException(MenuShortcut.class, "order " + order));
+        deleteById(shortcut.getId());
+        reorderAfterDeletion(username);
+    }
 
-            deleteAll(shortcutsToRemove);
-
-            for (String username : affectedUsers) {
-                reorderAfterDeletion(username);
-            }
-        }
+    @Override
+    @Transactional
+    public void deleteById(Long id) {
+        MenuShortcut shortcut = get(id);
+        super.deleteById(shortcut.getId());
+        reorderAfterDeletion(shortcut.getUsername());
     }
 
     private void reorderAfterDeletion(String username) {

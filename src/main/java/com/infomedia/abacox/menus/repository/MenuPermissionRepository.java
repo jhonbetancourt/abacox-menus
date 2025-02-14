@@ -4,6 +4,9 @@ import com.infomedia.abacox.menus.entity.Menu;
 import com.infomedia.abacox.menus.entity.MenuPermission;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -14,5 +17,6 @@ public interface MenuPermissionRepository extends JpaRepository<MenuPermission, 
     boolean existsByRolenameAndMenu_Id(String rolename, Long id);
 
     Optional<MenuPermission> findByRolenameAndMenu(String rolename, Menu menu);
+
 
 }
