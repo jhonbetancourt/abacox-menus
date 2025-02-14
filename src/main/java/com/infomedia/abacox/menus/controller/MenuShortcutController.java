@@ -28,12 +28,12 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
-@Tag(name = "Menu", description = "Menu Controller")
+@Tag(name = "Menu Shortcut", description = "Menu Shortcut Controller")
 @SecurityRequirements({
         @SecurityRequirement(name = "JWT_Token"),
         @SecurityRequirement(name = "Username")
 })
-@RequestMapping("/api/menu")
+@RequestMapping("/api/menuShortcut")
 public class MenuShortcutController {
 
     private final MenuShortcutService menuShortcutService;

@@ -33,7 +33,8 @@ public class UserService extends RemoteService {
     }
 
     public PageDto<UserDto> findUsers(String filter, int page, int size, String sort) {
-        Map<String, Object> params = Map.of("filter", filter, "page", page, "size", size, "sort", sort);
+        Map<String, Object> params = Map.of("filter", filter==null?"":filter
+                , "page", page, "size", size, "sort", sort==null?"":sort);
         TypeReference<PageDto<UserDto>> typeReference = new TypeReference<>() {};
         return get(params, "/api/user", typeReference);
     }
@@ -44,7 +45,8 @@ public class UserService extends RemoteService {
     }
 
     public PageDto<RoleDto> findRoles(String filter, int page, int size, String sort) {
-        Map<String, Object> params = Map.of("filter", filter, "page", page, "size", size, "sort", sort);
+        Map<String, Object> params = Map.of("filter", filter==null?"":filter
+                , "page", page, "size", size, "sort", sort==null?"":sort);
         TypeReference<PageDto<RoleDto>> typeReference = new TypeReference<>() {};
         return get(params, "/api/role", typeReference);
     }
