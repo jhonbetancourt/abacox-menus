@@ -3,7 +3,6 @@ package com.infomedia.abacox.menus.repository;
 import com.infomedia.abacox.menus.entity.MenuShortcut;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
@@ -12,11 +11,11 @@ public interface MenuShortcutRepository extends JpaRepository<MenuShortcut, Long
 
     long countByUsername(String username);
 
-    List<MenuShortcut> findByUsernameOrderByOrderAsc(String username);
+    List<MenuShortcut> findByUsernameOrderByPositionAsc(String username);
 
-    boolean existsByUsernameAndOrder(String username, Integer order);
-
-    Optional<MenuShortcut> findByUsernameAndOrder(String username, Integer order);
+    Optional<MenuShortcut> findByUsernameAndPosition(String username, Integer order);
 
     List<MenuShortcut> findByMenuPermission_Id(Long id);
+
+    boolean existsByUsernameAndMenuPermission_Id(String username, Long id);
 }

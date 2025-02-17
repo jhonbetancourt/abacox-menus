@@ -32,57 +32,64 @@ public class MenuShortcutService extends CrudService<MenuShortcut, Long, MenuSho
         MenuPermission menuPermission = menuPermissionService.get(cDto.getMenuPermissionId());
         MenuShortcut menuShortcut = MenuShortcut.builder()
                 .menuPermission(menuPermission)
-                .order(cDto.getOrder())
+                .position(cDto.getPosition())
                 .username(cDto.getUsername())
                 .build();
         validateUser(cDto.getUsername(), menuPermission);
-        validateOrder(cDto.getUsername(), cDto.getOrder());
-        reorderExistingShortcuts(cDto.getUsername(), cDto.getOrder());
+        validatePosition(cDto.getUsername(), cDto.getPosition());
+        validateDuplicateShortcut(cDto.getUsername(), menuPermission);
+        reorderExistingShortcuts(cDto.getUsername(), cDto.getPosition());
         return save(menuShortcut);
     }
 
+    private void validateDuplicateShortcut(String username, MenuPermission menuPermission) {
+        if (getRepository().existsByUsernameAndMenuPermission_Id(username, menuPermission.getId())) {
+            throw new ValidationException("Shortcut already exists for this menu");
+        }
+    }
+
     private void validateUser(String username, MenuPermission menuPermission) {
-        UserDto user = userService.findUser(username);
+        UserDto user = userService.findUser("username:'" + username + "'");
         if (user == null) {
             throw new ValidationException("User does not exist");
         }
-        if (!menuPermission.getRolename().equals(user.getRole().getName())) {
+        if (!menuPermission.getRolename().equals(user.getRole().getRolename())) {
             throw new ValidationException("User does not have the required role");
         }
     }
 
-    private void validateOrder(String username, Integer order) {
+    private void validatePosition(String username, Integer position) {
         long shortcutCount = getRepository().countByUsername(username);
         if(shortcutCount >= 100) {
             throw new ValidationException("User has reached the maximum number of shortcuts");
         }
 
-        if(order > shortcutCount || order < 0) {
-            throw new ValidationException("Order is invalid");
+        if(position > shortcutCount || position < 0) {
+            throw new ValidationException("Position is invalid");
         }
     }
 
-    private void reorderExistingShortcuts(String username, Integer newOrder) {
-        List<MenuShortcut> existingShortcuts = getRepository().findByUsernameOrderByOrderAsc(username);
+    private void reorderExistingShortcuts(String username, Integer newPosition) {
+        List<MenuShortcut> existingShortcuts = getRepository().findByUsernameOrderByPositionAsc(username);
 
         for (MenuShortcut shortcut : existingShortcuts) {
-            if (shortcut.getOrder() >= newOrder) {
-                shortcut.setOrder(shortcut.getOrder() + 1);
+            if (shortcut.getPosition() >= newPosition) {
+                shortcut.setPosition(shortcut.getPosition() + 1);
                 save(shortcut);
             }
         }
     }
 
     @Transactional
-    public void swapShortcutsByOrder(String username, Integer order1, Integer order2) {
-        MenuShortcut shortcut1 = getRepository().findByUsernameAndOrder(username, order1)
-                .orElseThrow(() -> new ResourceNotFoundException(MenuShortcut.class, "order " + order1));
-        MenuShortcut shortcut2 = getRepository().findByUsernameAndOrder(username, order2)
-                .orElseThrow(() -> new ResourceNotFoundException(MenuShortcut.class, "order " + order2));
+    public void swapShortcutsByPosition(String username, Integer position1, Integer position2) {
+        MenuShortcut shortcut1 = getRepository().findByUsernameAndPosition(username, position1)
+                .orElseThrow(() -> new ResourceNotFoundException(MenuShortcut.class, "position " + position1));
+        MenuShortcut shortcut2 = getRepository().findByUsernameAndPosition(username, position2)
+                .orElseThrow(() -> new ResourceNotFoundException(MenuShortcut.class, "position " + position2));
 
         // Swap the orders
-        shortcut1.setOrder(order2);
-        shortcut2.setOrder(order1);
+        shortcut1.setPosition(position2);
+        shortcut2.setPosition(position1);
 
         // Save both shortcuts
         save(shortcut1);
@@ -92,25 +99,17 @@ public class MenuShortcutService extends CrudService<MenuShortcut, Long, MenuSho
     @Transactional
     public List<MenuShortcut> findByUsername(String username) {
         removeInvalidShortcuts(username);
-        Specification<MenuShortcut> spec = SpecificationFilter.build("'username':'" + username + "' and 'menuPermission.menu.active':'true'");
+        Specification<MenuShortcut> spec = SpecificationFilter.build("username:'" + username + "' and menuPermission.menu.active:'true'");
         return getRepository().findAll(spec);
     }
 
     private void removeInvalidShortcuts(String username) {
-        UserDto user = userService.findUser(username);
-        List<MenuShortcut> existingShortcuts = getRepository().findByUsernameOrderByOrderAsc(username);
+        UserDto user = userService.findUser("username:'" + username + "'");
+        List<MenuShortcut> existingShortcuts = getRepository().findByUsernameOrderByPositionAsc(username);
         List<MenuShortcut> toRemove = existingShortcuts.stream()
-                .filter(shortcut -> !shortcut.getMenuPermission().getRolename().equals(user.getRole().getName()))
+                .filter(shortcut -> !shortcut.getMenuPermission().getRolename().equals(user.getRole().getRolename()))
                 .toList();
         deleteAll(toRemove);
-    }
-
-    @Transactional
-    public void deleteByUsernameAndOrder(String username, Integer order) {
-        MenuShortcut shortcut = getRepository().findByUsernameAndOrder(username, order)
-                .orElseThrow(() -> new ResourceNotFoundException(MenuShortcut.class, "order " + order));
-        deleteById(shortcut.getId());
-        reorderAfterDeletion(username);
     }
 
     @Override
@@ -122,11 +121,11 @@ public class MenuShortcutService extends CrudService<MenuShortcut, Long, MenuSho
     }
 
     private void reorderAfterDeletion(String username) {
-        List<MenuShortcut> remainingShortcuts = getRepository().findByUsernameOrderByOrderAsc(username);
+        List<MenuShortcut> remainingShortcuts = getRepository().findByUsernameOrderByPositionAsc(username);
         for (int i = 0; i < remainingShortcuts.size(); i++) {
             MenuShortcut shortcut = remainingShortcuts.get(i);
-            if (shortcut.getOrder() != i) {
-                shortcut.setOrder(i);
+            if (shortcut.getPosition() != i) {
+                shortcut.setPosition(i);
                 save(shortcut);
             }
         }

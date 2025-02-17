@@ -1,11 +1,9 @@
 package com.infomedia.abacox.menus.config;
 
 
-import com.infomedia.abacox.menus.exception.ResourceAlreadyExistsException;
-import com.infomedia.abacox.menus.exception.ResourceDeletionException;
-import com.infomedia.abacox.menus.exception.ResourceDisabledException;
-import com.infomedia.abacox.menus.exception.ResourceNotFoundException;
+import com.infomedia.abacox.menus.exception.*;
 import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.ValidationException;
 import lombok.extern.log4j.Log4j2;
 import org.postgresql.util.PSQLException;
 import org.postgresql.util.ServerErrorMessage;
@@ -46,6 +44,15 @@ public class ExceptionHandlerConfig extends ResponseEntityExceptionHandler {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
         problemDetail.setTitle("Resource Already Exists");
         problemDetail.setType(URI.create("resource-already-exists"));
+        problemDetail.setProperty("timestamp", LocalDateTime.now());
+        return problemDetail;
+    }
+
+    @ExceptionHandler(RemoteServiceException.class)
+    public ProblemDetail handleRemoteServiceException(RemoteServiceException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+        problemDetail.setTitle("Remote Service Error");
+        problemDetail.setType(URI.create("remote-service-error"));
         problemDetail.setProperty("timestamp", LocalDateTime.now());
         return problemDetail;
     }
@@ -135,14 +142,23 @@ public class ExceptionHandlerConfig extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(problemDetail, headers, status);
     }
 
+    @ExceptionHandler(ValidationException.class)
+    public ProblemDetail handleValidationException(ValidationException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problemDetail.setTitle("Validation Error");
+        problemDetail.setType(URI.create("validation-error"));
+        problemDetail.setProperty("timestamp", LocalDateTime.now());
+        return problemDetail;
+    }
+
     @ExceptionHandler(ConstraintViolationException.class)
     public ProblemDetail handleConstraintViolation(ConstraintViolationException ex) {
         String errorMessage = ex.getConstraintViolations().stream()
                 .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
                 .collect(Collectors.joining(", "));
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, errorMessage);
-        problemDetail.setTitle("Constraint Violation");
-        problemDetail.setType(URI.create("constraint-violation"));
+        problemDetail.setTitle("Validation Error");
+        problemDetail.setType(URI.create("validation-error"));
         problemDetail.setProperty("timestamp", LocalDateTime.now());
         return problemDetail;
     }

@@ -39,7 +39,7 @@ public class MenuPermissionService extends CrudService<MenuPermission, Long, Men
     }
 
     private void validateRoleExists(String rolename) {
-        RoleDto role = userService.findRole(rolename);
+        RoleDto role = userService.findRole("rolename:'" + rolename + "'");
         if (role == null) {
             throw new ValidationException("Role does not exist");
         }
@@ -183,11 +183,11 @@ public class MenuPermissionService extends CrudService<MenuPermission, Long, Men
     }
 
     private void reorderRemainingShortcuts(String username) {
-        List<MenuShortcut> remainingShortcuts = menuShortcutRepository.findByUsernameOrderByOrderAsc(username);
+        List<MenuShortcut> remainingShortcuts = menuShortcutRepository.findByUsernameOrderByPositionAsc(username);
         for (int i = 0; i < remainingShortcuts.size(); i++) {
             MenuShortcut shortcut = remainingShortcuts.get(i);
-            if (shortcut.getOrder() != i) {
-                shortcut.setOrder(i);
+            if (shortcut.getPosition() != i) {
+                shortcut.setPosition(i);
                 menuShortcutRepository.save(shortcut);
             }
         }

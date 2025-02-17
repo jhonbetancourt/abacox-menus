@@ -20,12 +20,12 @@ public class SwapMenuShortcut {
     @NotNull
     @Min(0)
     @Max(99)
-    @Schema(description = "Order of the first shortcut", example = "0")
-    private Integer order1;
+    @Schema(description = "Position of the first shortcut", example = "0")
+    private Integer position1;
 
     @NotNull
     @Min(0)
     @Max(99)
-    @Schema(description = "Order of the second shortcut", example = "1")
-    private Integer order2;
+    @Schema(description = "Position of the second shortcut", example = "1")
+    private Integer position2;
 }

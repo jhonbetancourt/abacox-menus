@@ -22,8 +22,8 @@ public class CreateMenuShortcut {
     @NotNull
     @Min(0)
     @Max(99)
-    @Schema(description = "Order of the shortcut", example = "0")
-    private Integer order;
+    @Schema(description = "Position of the shortcut", example = "0")
+    private Integer position;
     @NotBlank
     @Schema(description = "Username of the user who has the shortcut", example = "admin")
     private String username;

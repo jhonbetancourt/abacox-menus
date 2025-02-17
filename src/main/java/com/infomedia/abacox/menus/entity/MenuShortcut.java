@@ -20,12 +20,12 @@ public class MenuShortcut extends AuditedEntity {
     private Long id;
 
     @ToString.Exclude
-    @ManyToOne(cascade = CascadeType.ALL, optional = false)
+    @ManyToOne(optional = false)
     @JoinColumn(name = "menu_permission_id", nullable = false)
     private MenuPermission menuPermission;
 
-    @Column(name = "order", nullable = false)
-    private Integer order;
+    @Column(name = "position", nullable = false)
+    private Integer position;
 
     @Column(name = "username", nullable = false, length = 30)
     private String username;
