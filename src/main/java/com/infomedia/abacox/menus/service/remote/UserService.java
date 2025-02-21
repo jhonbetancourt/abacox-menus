@@ -3,33 +3,22 @@ package com.infomedia.abacox.menus.service.remote;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.infomedia.abacox.menus.dto.generic.PageDto;
 import com.infomedia.abacox.menus.dto.role.RoleDto;
-import com.infomedia.abacox.menus.dto.user.UserContactInfoDto;
 import com.infomedia.abacox.menus.dto.user.UserDto;
 import com.infomedia.abacox.menus.service.AuthService;
+import com.infomedia.abacox.menus.service.ConfigurationService;
 import com.infomedia.abacox.menus.service.common.RemoteService;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Map;
 
 @Service
 public class UserService extends RemoteService {
 
-    private final ControlService controlService;
+    private final ConfigurationService configurationService;
 
-    protected UserService(AuthService authService, ControlService controlService) {
+    protected UserService(AuthService authService, ConfigurationService configurationService) {
         super(authService);
-        this.controlService = controlService;
-    }
-
-    public List<UserContactInfoDto> getContactInfoByRoles(List<String> roles) {
-        TypeReference<List<UserContactInfoDto>> typeReference = new TypeReference<>() {};
-        return get(Map.of("roles", roles), "/api/ext/user/contactInfoByRoles", typeReference);
-    }
-
-    public List<UserContactInfoDto> getContactInfoByUsernames(List<String> usernames) {
-        TypeReference<List<UserContactInfoDto>> typeReference = new TypeReference<>() {};
-        return get(Map.of("usernames", usernames), "/api/ext/user/contactInfoByUsernames", typeReference);
+        this.configurationService = configurationService;
     }
 
     public PageDto<UserDto> findUsers(String filter, int page, int size, String sort) {
@@ -58,6 +47,6 @@ public class UserService extends RemoteService {
 
     @Override
     public String getBaseUrl() {
-        return controlService.getInfoByPrefix("users").getUrl();
+        return configurationService.getUsersUrl();
     }
 }
