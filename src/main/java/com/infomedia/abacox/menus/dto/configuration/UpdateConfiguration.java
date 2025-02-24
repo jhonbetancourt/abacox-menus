@@ -7,9 +7,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.openapitools.jackson.nullable.JsonNullable;
 
-@Data
+/*@Data
 @AllArgsConstructor
-@NoArgsConstructor
+@NoArgsConstructor*/
 public class UpdateConfiguration {
    /* @NotNull
     @Schema(description = "whether to allow only one session per user", example = "false")

@@ -5,10 +5,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-@Data
+/*@Data
 @AllArgsConstructor
 @NoArgsConstructor
-@SuperBuilder(toBuilder = true)
+@SuperBuilder(toBuilder = true)*/
 public class ConfigurationDto {
    /* private Boolean singleSession;
     private Integer sessionMaxAge;*/
