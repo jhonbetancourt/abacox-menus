@@ -19,4 +19,7 @@ public class MenuShortcutDto extends AuditedDto {
     private MenuPermissionDto menuPermission;
     private Integer position;
     private String username;
+    private String style;
+    private String shortName;
+    private String initials;
 }

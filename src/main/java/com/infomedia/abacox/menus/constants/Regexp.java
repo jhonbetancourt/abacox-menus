@@ -11,6 +11,7 @@ public class Regexp {
             "@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?";
     public static final String PHONE = "^\\+?\\d{5,20}$";
     public static final String IP = "^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$|^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$";
+    public static final String MAYUS_ONLY = "^[A-Z]+$";
 
 
     private Regexp() {
@@ -20,6 +21,7 @@ public class Regexp {
         Pattern.compile(EMAIL);
         Pattern.compile(PHONE);
         Pattern.compile(IP);
+        Pattern.compile(MAYUS_ONLY);
     }
 
     public static final String MSG_USERNAME = "Username must contain only letters, numbers, underscores and hyphens";
@@ -28,5 +30,6 @@ public class Regexp {
     public static final String MSG_EMAIL = "Invalid email address";
     public static final String MSG_PHONE = "Invalid phone number";
     public static final String MSG_IP = "Invalid IP address";
+    public static final String MSG_MAYUS_ONLY = "Only uppercase letters are allowed";
 
 }

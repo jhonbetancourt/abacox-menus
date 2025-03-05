@@ -29,4 +29,13 @@ public class MenuShortcut extends AuditedEntity {
 
     @Column(name = "username", nullable = false, length = 30)
     private String username;
+
+    @Column(name = "style", nullable = false, length = 20)
+    private String style;
+
+    @Column(name = "short_name", nullable = false, length = 10)
+    private String shortName;
+
+    @Column(name = "initials", nullable = false, length = 3)
+    private String initials;
 }

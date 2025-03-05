@@ -34,6 +34,9 @@ public class MenuShortcutService extends CrudService<MenuShortcut, Long, MenuSho
                 .menuPermission(menuPermission)
                 .position(cDto.getPosition())
                 .username(cDto.getUsername())
+                .style(cDto.getStyle())
+                .shortName(cDto.getShortName())
+                .initials(cDto.getInitials())
                 .build();
         validateUser(cDto.getUsername(), menuPermission);
         validatePosition(cDto.getUsername(), cDto.getPosition());
