@@ -5,7 +5,6 @@ import com.infomedia.abacox.menus.dto.generic.PageDto;
 import com.infomedia.abacox.menus.dto.role.RoleDto;
 import com.infomedia.abacox.menus.dto.user.UserDto;
 import com.infomedia.abacox.menus.service.AuthService;
-import com.infomedia.abacox.menus.service.ConfigurationService;
 import com.infomedia.abacox.menus.service.common.RemoteService;
 import org.springframework.stereotype.Service;
 
@@ -14,11 +13,11 @@ import java.util.Map;
 @Service
 public class UserService extends RemoteService {
 
-    private final ConfigurationService configurationService;
+    private final ControlService controlService;
 
-    protected UserService(AuthService authService, ConfigurationService configurationService) {
+    protected UserService(AuthService authService, ControlService controlService) {
         super(authService);
-        this.configurationService = configurationService;
+        this.controlService = controlService;
     }
 
     public PageDto<UserDto> findUsers(String filter, int page, int size, String sort) {
@@ -47,6 +46,6 @@ public class UserService extends RemoteService {
 
     @Override
     public String getBaseUrl() {
-        return configurationService.getUsersUrl();
+        return controlService.getUsersUrl();
     }
 }

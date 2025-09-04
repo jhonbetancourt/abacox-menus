@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.infomedia.abacox</groupId>
 	<artifactId>menus</artifactId>
-	<version>1.0</version>
+	<version>1.0.0</version>
 	<name>menus</name>
 	<description>Modulo de menus de abacox</description>
 	<url/>

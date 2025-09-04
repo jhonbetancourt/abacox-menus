@@ -64,6 +64,7 @@ public class SecurityConfig {
                 , "/swagger-ui.html"
                 , "/error"
                 , "/api/module/*"
+                , "/api/health/**"
                 , "/websocket/module"};
     }
 
